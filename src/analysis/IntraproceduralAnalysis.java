@@ -57,12 +57,22 @@ public class IntraproceduralAnalysis extends ForwardFlowAnalysis<Unit, Set<FlowA
 		logger.info("Unit " + d);
 		if (d instanceof JAssignStmt) {
 			JAssignStmt assignStmt = (JAssignStmt) d;
+			
+			/* 
+			 * Checking that right box is instance of JSpecialInvoke expression and  check if right side
+			 * contains the method from which tainted value is coming. Add the left box value to a set of 
+			 *tainted values 
+			 */
 			if ((assignStmt.getRightOpBox().getValue() instanceof JSpecialInvokeExpr)
 					&& (assignStmt.getRightOpBox().getValue().toString().contains("getSecret"))) {
 				FlowAbstraction flowAbstraction = new FlowAbstraction(d, (Local) assignStmt.getLeftOpBox().getValue());
 				taintsOut.add(flowAbstraction);
-
-			} else if ((assignStmt.getRightOpBox().getValue() instanceof JimpleLocal)) {
+			}
+			/* 
+			 * Check if right box is instance of JimpleLocal and this value is tainted
+			 * then add left box value to tainted values. 
+			 */
+			 else if ((assignStmt.getRightOpBox().getValue() instanceof JimpleLocal)) {
 				Local rightVal = (Local) assignStmt.getRightOpBox().getValue();
 				if (taintsIn.iterator().next().getLocal() == rightVal) {
 					if(assignStmt.getLeftOpBox().getValue() instanceof FieldRef) {
@@ -76,7 +86,12 @@ public class IntraproceduralAnalysis extends ForwardFlowAnalysis<Unit, Set<FlowA
 						taintsOut.add(flowAbstraction);	
 						}	
 				}
-			} else if((assignStmt.getRightOpBox().getValue() instanceof JInstanceFieldRef)) {
+			}
+			/* 
+			 * Check if right box is instance of JInstanceFieldRef and this value is tainted
+			 * then add left box value to tainted values. 
+			 */	
+			 else if((assignStmt.getRightOpBox().getValue() instanceof JInstanceFieldRef)) {
 				FieldRef rightVal=(FieldRef) assignStmt.getRightOpBox().getValue();
 					if(assignStmt.getLeftOpBox().getValue() instanceof FieldRef) {
 						FlowAbstraction flowAbstraction = new FlowAbstraction(d,
@@ -90,10 +105,10 @@ public class IntraproceduralAnalysis extends ForwardFlowAnalysis<Unit, Set<FlowA
 						}	
 				
 			}
-			
-			/* This is the code to remove the taint if the right side of the statement is constant
-			and left side is local but I am not sure why it is not working*/
-			
+			/*
+			 *  Check if right box is instance of StringConstant, remove the left box value from 
+			 * the tainted values.
+			 */							
 			else if ((assignStmt.getRightOpBox().getValue() instanceof StringConstant)
 					&& (assignStmt.getLeftOpBox().getValue() instanceof JimpleLocal)) {
 				 Local leftVal = (Local) assignStmt.getLeftOpBox().getValue();
@@ -104,6 +119,10 @@ public class IntraproceduralAnalysis extends ForwardFlowAnalysis<Unit, Set<FlowA
 				 }
 			}
 		}
+		
+		/*
+		 * Report the values that are tainted and passed as a parameter to other functions.
+		 */
 		if (d instanceof JInvokeStmt) {
 			JInvokeStmt jInvokeStmt = (JInvokeStmt) d;
 			SootMethod method = jInvokeStmt.getInvokeExpr().getMethod();
@@ -117,26 +136,16 @@ public class IntraproceduralAnalysis extends ForwardFlowAnalysis<Unit, Set<FlowA
 						reporter.report(this.method, fab.getSource(), d);
 					}
 				}
-//				Iterator<FlowAbstraction> it = taintsIn.iterator();
-//				while (it.hasNext()) {
-//					FlowAbstraction fab = it.next();
-//					if (fab.getLocal().getName().contains(arg.getName())) {
-//						reporter.report(this.method, fab.getSource(), d);
-//					}
-//				}
 			}
 		}
-//		Iterator<FlowAbstraction> it = taintsIn.iterator();
+		
+		/*
+		 * Adding all tainted Values to a set
+		 */
 		for(Object object : taintsIn) {
 			taintsOut.add((FlowAbstraction) object);
 		}
 		
-//		while (it.hasNext()) {
-//			taintsOut.add(it.next());
-//		}
-		/* IMPLEMENT YOUR ANALYSIS HERE */
-
-		// reporter.report(this.method, fa.getSource(), d);
 	}
 
 	@Override

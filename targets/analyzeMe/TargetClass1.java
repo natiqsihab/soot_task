@@ -41,6 +41,13 @@ public class TargetClass1 {
 		TaintedClass taintedClass=new TaintedClass();
 		taintedClass.a=x;
 		leak(taintedClass.a);
+		leak(taintedClass);
+	}
+
+	private void leak(TaintedClass taintedClass) {
+		System.out.println("Leak: "+ taintedClass);
+		// TODO Auto-generated method stub
+		
 	}
 
 	// Test 6
