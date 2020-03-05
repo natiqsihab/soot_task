@@ -12,17 +12,20 @@ import com.google.common.collect.Sets;
 import reporting.Reporter;
 import soot.Body;
 import soot.Local;
+import soot.SootField;
 import soot.SootMethod;
 import soot.Unit;
 import soot.Value;
 import soot.jimple.AssignStmt;
 import soot.jimple.DefinitionStmt;
+import soot.jimple.FieldRef;
 import soot.jimple.InvokeExpr;
 import soot.jimple.InvokeStmt;
 import soot.jimple.SpecialInvokeExpr;
 import soot.jimple.Stmt;
 import soot.jimple.StringConstant;
 import soot.jimple.internal.JAssignStmt;
+import soot.jimple.internal.JInstanceFieldRef;
 import soot.jimple.internal.JInvokeStmt;
 import soot.jimple.internal.JSpecialInvokeExpr;
 import soot.jimple.internal.JimpleLocal;
@@ -62,10 +65,30 @@ public class IntraproceduralAnalysis extends ForwardFlowAnalysis<Unit, Set<FlowA
 			} else if ((assignStmt.getRightOpBox().getValue() instanceof JimpleLocal)) {
 				Local rightVal = (Local) assignStmt.getRightOpBox().getValue();
 				if (taintsIn.iterator().next().getLocal() == rightVal) {
-					FlowAbstraction flowAbstraction = new FlowAbstraction(d,
-							(Local) assignStmt.getLeftOpBox().getValue());
-					taintsOut.add(flowAbstraction);
+					if(assignStmt.getLeftOpBox().getValue() instanceof FieldRef) {
+						FlowAbstraction flowAbstraction = new FlowAbstraction(d,
+								(FieldRef) assignStmt.getLeftOpBox().getValue());
+						taintsOut.add(flowAbstraction);
+					}
+					else{
+						FlowAbstraction flowAbstraction = new FlowAbstraction(d,
+								(Local) assignStmt.getLeftOpBox().getValue());
+						taintsOut.add(flowAbstraction);	
+						}	
 				}
+			} else if((assignStmt.getRightOpBox().getValue() instanceof JInstanceFieldRef)) {
+				FieldRef rightVal=(FieldRef) assignStmt.getRightOpBox().getValue();
+					if(assignStmt.getLeftOpBox().getValue() instanceof FieldRef) {
+						FlowAbstraction flowAbstraction = new FlowAbstraction(d,
+								(FieldRef) assignStmt.getLeftOpBox().getValue());
+						taintsOut.add(flowAbstraction);
+					}
+					else{
+						FlowAbstraction flowAbstraction = new FlowAbstraction(d,
+								(Local) assignStmt.getLeftOpBox().getValue());
+						taintsOut.add(flowAbstraction);	
+						}	
+				
 			}
 			
 			/* This is the code to remove the taint if the right side of the statement is constant
@@ -73,10 +96,12 @@ public class IntraproceduralAnalysis extends ForwardFlowAnalysis<Unit, Set<FlowA
 			
 			else if ((assignStmt.getRightOpBox().getValue() instanceof StringConstant)
 					&& (assignStmt.getLeftOpBox().getValue() instanceof JimpleLocal)) {
-				// Local leftVal = (Local) assignStmt.getLeftOpBox().getValue();
-				// if(taintsIn.iterator().next().getLocal() == leftVal) {
-				// taintsIn.iterator().remove();
-				// }
+				 Local leftVal = (Local) assignStmt.getLeftOpBox().getValue();
+				 if(!taintsIn.isEmpty()) {
+					 if(taintsIn.iterator().next().getLocal() == leftVal) {
+						 taintsIn.iterator().remove();
+					 }
+				 }
 			}
 		}
 		if (d instanceof JInvokeStmt) {
@@ -85,19 +110,30 @@ public class IntraproceduralAnalysis extends ForwardFlowAnalysis<Unit, Set<FlowA
 			if (method.getName().equals("leak")) {
 				JimpleLocal arg = (JimpleLocal) jInvokeStmt.getInvokeExpr().getArg(0);
 
-				Iterator<FlowAbstraction> it = taintsIn.iterator();
-				while (it.hasNext()) {
-					FlowAbstraction fab = it.next();
-					if (fab.getLocal().getName().equals(arg.getName())) {
+				for(Object object : taintsIn) {
+					FlowAbstraction fab=(FlowAbstraction) object;
+					
+					if (fab.toString().contains(arg.getName())) {
 						reporter.report(this.method, fab.getSource(), d);
 					}
 				}
+//				Iterator<FlowAbstraction> it = taintsIn.iterator();
+//				while (it.hasNext()) {
+//					FlowAbstraction fab = it.next();
+//					if (fab.getLocal().getName().contains(arg.getName())) {
+//						reporter.report(this.method, fab.getSource(), d);
+//					}
+//				}
 			}
 		}
-		Iterator<FlowAbstraction> it = taintsIn.iterator();
-		while (it.hasNext()) {
-			taintsOut.add(it.next());
+//		Iterator<FlowAbstraction> it = taintsIn.iterator();
+		for(Object object : taintsIn) {
+			taintsOut.add((FlowAbstraction) object);
 		}
+		
+//		while (it.hasNext()) {
+//			taintsOut.add(it.next());
+//		}
 		/* IMPLEMENT YOUR ANALYSIS HERE */
 
 		// reporter.report(this.method, fa.getSource(), d);

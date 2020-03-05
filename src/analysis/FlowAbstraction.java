@@ -3,6 +3,7 @@ package analysis;
 import soot.Local;
 import soot.SootField;
 import soot.Unit;
+import soot.jimple.FieldRef;
 
 /**
  * Class containing the information to be aggregated during the analysis
@@ -12,17 +13,17 @@ public class FlowAbstraction {
 
 	private final Unit source;
 	private Local local;
-	private final SootField field;
+	private final FieldRef field;
 
 	public FlowAbstraction(Unit source, Local local) {
 		this(source, local, null);
 	}
 
-	public FlowAbstraction(Unit source, SootField field) {
+	public FlowAbstraction(Unit source, FieldRef field) {
 		this(source, null, field);
 	}
 
-	public FlowAbstraction(Unit source, Local local, SootField field) {
+	public FlowAbstraction(Unit source, Local local, FieldRef field) {
 		this.source = source;
 		this.local = local;
 		this.field = field;
@@ -40,7 +41,7 @@ public class FlowAbstraction {
 		return this.local;
 	}
 
-	public SootField getField() {
+	public FieldRef getField() {
 		return this.field;
 	}
 

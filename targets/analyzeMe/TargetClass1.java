@@ -29,17 +29,18 @@ public class TargetClass1 {
 	// Test 4
 	public void sourceToSink4() {
 		String x = getSecret();
-		//String y = x;
-		//x = "test";
-		//leak(x);
+		String y = x;
+		y="test";
+		leak(x);
+		leak(y);
 	}
 
 	// Test 5
 	public void sourceToSink5() {
 		String x = getSecret();
-//		taintedClass taintedClass=new taintedClass();
-//		taintedClass.a=x;
-//		leak(taintedClass.a);
+		TaintedClass taintedClass=new TaintedClass();
+		taintedClass.a=x;
+		leak(taintedClass.a);
 	}
 
 	// Test 6
@@ -51,18 +52,4 @@ public class TargetClass1 {
 	private String getSecret() {
 		return "top secret";
 	}
-
-	
-//	 class taintedClass {
-//		taintedClass(){
-//			
-//		}
-//		taintedClass(String a){
-//			
-//		}
-//		public String a;
-//		public String b;
-//	}
-
-
 }
