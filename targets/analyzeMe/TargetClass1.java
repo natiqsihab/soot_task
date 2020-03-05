@@ -40,6 +40,8 @@ public class TargetClass1 {
 		String x = getSecret();
 		TaintedClass taintedClass=new TaintedClass();
 		taintedClass.a=x;
+		
+		taintedClass = new TaintedClass();
 		leak(taintedClass.a);
 		leak(taintedClass);
 	}
